@@ -42,9 +42,9 @@ async function main() {
     // Acessamos o parâmetro de rota ID
     const id = req.params.id
 
-    // Acessamos o item na lista (usando o id - 1)
+    // Acessamos o item na collection (usando o ObjectId)
     // e colocamos na variável item
-    const item = await collection.findOne({ _id: new ObjectId(id)})
+    const item = await collection.findOne({ _id: new ObjectId(id) })
 
     // Enviamos para a resposta o item acessado
     res.send(item)
@@ -54,16 +54,15 @@ async function main() {
   app.use(express.json())
 
   // Endpoint Create -> [POST] /item
-  app.post('/item', function (req, res) {
+  app.post('/item', async function (req, res) {
     // Pegamos o item através do corpo da requisição
-    // No objeto JSON, pegamos a propriedade nome
-    const item = req.body.nome
+    const item = req.body
 
-    // Adicionamos o item obtido na lista
-    lista.push(item)
+    // Adicionamos o item obtido na collection
+    await collection.insertOne(item)
 
-    // Exibimos uma mensagem de sucesso
-    res.send('Item adicionado com sucesso: ' + item)
+    // Exibimos o item adicionado
+    res.send(item)
   })
 
   // Endpoint Update -> [PUT] /item/:id
@@ -72,22 +71,25 @@ async function main() {
     const id = req.params.id
 
     // Obtemos o corpo da requisição para saber qual o novo valor
-    const novoItem = req.body.nome
+    const novoItem = req.body
 
-    // Atualizamos o item na lista
-    lista[id - 1] = novoItem
+    // Atualizamos o item na collection
+    collection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: novoItem }
+    )
 
     // Enviamos uma mensagem de sucesso
-    res.send('Item atualizado com sucesso: ' + id + '. ' + novoItem)
+    res.send('Item atualizado com sucesso: ' + id)
   })
 
   // Endpoint Delete -> [DELETE] /item/:id
-  app.delete('/item/:id', function (req, res) {
+  app.delete('/item/:id', async function (req, res) {
     // Obtemos o ID do parâmetro de rota
     const id = req.params.id
 
-    // Removemos o item da lista
-    delete lista[id - 1]
+    // Removemos o item da collection
+    await collection.deleteOne({ _id: new ObjectId(id) })
 
     // Exibimos uma mensagem de sucesso
     res.send('Item removido com sucesso: ' + id)
